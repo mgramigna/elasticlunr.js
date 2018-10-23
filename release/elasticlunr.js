@@ -1,9 +1,9 @@
 /**
  * elasticlunr - http://weixsong.github.io
- * Lightweight full-text search engine in Javascript for browser search and offline search. - 0.9.5
+ * Lightweight full-text search engine in Javascript for browser search and offline search. - 0.9.6
  *
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  * MIT Licensed
  * @license
  */
@@ -12,8 +12,8 @@
 
 /*!
  * elasticlunr.js
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -83,7 +83,7 @@ var elasticlunr = function (config) {
   return idx;
 };
 
-elasticlunr.version = "0.9.5";
+elasticlunr.version = "0.9.6";
 
 // only used this to make elasticlunr.js compatible with lunr-languages
 // this is a trick to define a global alias of elasticlunr
@@ -91,8 +91,8 @@ lunr = elasticlunr;
 
 /*!
  * elasticlunr.utils
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -134,8 +134,8 @@ elasticlunr.utils.toString = function (obj) {
 };
 /*!
  * elasticlunr.EventEmitter
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -222,8 +222,8 @@ elasticlunr.EventEmitter.prototype.hasHandler = function (name) {
 };
 /*!
  * elasticlunr.tokenizer
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -308,8 +308,8 @@ elasticlunr.tokenizer.getSeperator = function() {
 }
 /*!
  * elasticlunr.Pipeline
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -563,8 +563,8 @@ elasticlunr.Pipeline.prototype.toJSON = function () {
 };
 /*!
  * elasticlunr.Index
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -919,14 +919,17 @@ elasticlunr.Index.prototype.search = function (query, userConfig) {
     var fieldBoost = config[field].boost;
 
     for (var docRef in fieldSearchResults) {
-      fieldSearchResults[docRef] = fieldSearchResults[docRef] * fieldBoost;
+      fieldSearchResults[docRef].score = fieldSearchResults[docRef].score * fieldBoost;
     }
 
     for (var docRef in fieldSearchResults) {
       if (docRef in queryResults) {
-        queryResults[docRef] += fieldSearchResults[docRef];
+        queryResults[docRef].score += fieldSearchResults[docRef].score;
       } else {
-        queryResults[docRef] = fieldSearchResults[docRef];
+        queryResults[docRef] = {
+          score: fieldSearchResults[docRef].score,
+          field: fieldSearchResults[docRef].field
+        };
       }
     }
   }
@@ -1044,6 +1047,14 @@ elasticlunr.Index.prototype.fieldSearch = function (queryTokens, fieldName, conf
   }, this);
 
   scores = this.coordNorm(scores, docTokens, queryTokens.length);
+
+  for (var docRef in scores) {
+    scores[docRef] = {
+      score: scores[docRef],
+      field: fieldName
+    }
+  }
+
   return scores;
 };
 
@@ -1180,7 +1191,7 @@ elasticlunr.Index.prototype.use = function (plugin) {
 };
 /*!
  * elasticlunr.DocumentStore
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -1374,8 +1385,8 @@ function clone(obj) {
 }
 /*!
  * elasticlunr.stemmer
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  * Includes code from - http://tartarus.org/~martin/PorterStemmer/js.txt
  */
 
@@ -1593,8 +1604,8 @@ elasticlunr.stemmer = (function(){
 elasticlunr.Pipeline.registerFunction(elasticlunr.stemmer, 'stemmer');
 /*!
  * elasticlunr.stopWordFilter
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -1780,8 +1791,8 @@ elasticlunr.stopWordFilter.stopWords = elasticlunr.defaultStopWords;
 elasticlunr.Pipeline.registerFunction(elasticlunr.stopWordFilter, 'stopWordFilter');
 /*!
  * elasticlunr.trimmer
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -1811,7 +1822,7 @@ elasticlunr.trimmer = function (token) {
 elasticlunr.Pipeline.registerFunction(elasticlunr.trimmer, 'trimmer');
 /*!
  * elasticlunr.InvertedIndex
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Wei Song
  * Includes code from - http://tartarus.org/~martin/PorterStemmer/js.txt
  */
 
@@ -2046,7 +2057,7 @@ elasticlunr.InvertedIndex.prototype.toJSON = function () {
 
 /*!
  * elasticlunr.Configuration
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Wei Song
  */
  
  /** 
@@ -2237,7 +2248,7 @@ elasticlunr.Configuration.prototype.reset = function () {
 
 /*!
  * lunr.SortedSet
- * Copyright (C) 2017 Oliver Nightingale
+ * Copyright (C) 2018 Oliver Nightingale
  */
 
 /**

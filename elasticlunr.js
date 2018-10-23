@@ -1,9 +1,9 @@
 /**
  * elasticlunr - http://weixsong.github.io
- * Lightweight full-text search engine in Javascript for browser search and offline search. - 0.9.5
+ * Lightweight full-text search engine in Javascript for browser search and offline search. - 0.9.6
  *
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  * MIT Licensed
  * @license
  */
@@ -12,8 +12,8 @@
 
 /*!
  * elasticlunr.js
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -22,7 +22,7 @@
  *
  * When using this convenience function a new index will be created with the
  * following functions already in the pipeline:
- * 
+ *
  * 1. elasticlunr.trimmer - trim non-word character
  * 2. elasticlunr.StopWordFilter - filters out any stop words before they enter the
  * index
@@ -35,29 +35,29 @@
  *       this.addField('id');
  *       this.addField('title');
  *       this.addField('body');
- *       
+ *
  *       //this.setRef('id'); // default ref is 'id'
  *
  *       this.pipeline.add(function () {
  *         // some custom pipeline function
  *       });
  *     });
- * 
+ *
  *    idx.addDoc({
- *      id: 1, 
+ *      id: 1,
  *      title: 'Oracle released database 12g',
  *      body: 'Yestaday, Oracle has released their latest database, named 12g, more robust. this product will increase Oracle profit.'
  *    });
- * 
+ *
  *    idx.addDoc({
- *      id: 2, 
+ *      id: 2,
  *      title: 'Oracle released annual profit report',
  *      body: 'Yestaday, Oracle has released their annual profit report of 2015, total profit is 12.5 Billion.'
  *    });
- * 
+ *
  *    # simple search
  *    idx.search('oracle database');
- * 
+ *
  *    # search with query-time boosting
  *    idx.search('oracle database', {fields: {title: {boost: 2}, body: {boost: 1}}});
  *
@@ -83,7 +83,7 @@ var elasticlunr = function (config) {
   return idx;
 };
 
-elasticlunr.version = "0.9.5";
+elasticlunr.version = "0.9.6";
 
 // only used this to make elasticlunr.js compatible with lunr-languages
 // this is a trick to define a global alias of elasticlunr
@@ -91,8 +91,8 @@ lunr = elasticlunr;
 
 /*!
  * elasticlunr.utils
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -134,8 +134,8 @@ elasticlunr.utils.toString = function (obj) {
 };
 /*!
  * elasticlunr.EventEmitter
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -144,7 +144,7 @@ elasticlunr.utils.toString = function (obj) {
  *
  * Each event could has multiple corresponding functions,
  * these functions will be called as the sequence that they are added into the event.
- * 
+ *
  * @constructor
  */
 elasticlunr.EventEmitter = function () {
@@ -222,8 +222,8 @@ elasticlunr.EventEmitter.prototype.hasHandler = function (name) {
 };
 /*!
  * elasticlunr.tokenizer
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -308,12 +308,12 @@ elasticlunr.tokenizer.getSeperator = function() {
 }
 /*!
  * elasticlunr.Pipeline
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
- * elasticlunr.Pipelines maintain an ordered list of functions to be applied to 
+ * elasticlunr.Pipelines maintain an ordered list of functions to be applied to
  * both documents tokens and query tokens.
  *
  * An instance of elasticlunr.Index will contain a pipeline
@@ -547,7 +547,7 @@ elasticlunr.Pipeline.prototype.reset = function () {
 /**
  * Returns a representation of the pipeline ready for serialisation.
  * Only serialize pipeline function's name. Not storing function, so when
- * loading the archived JSON index file, corresponding pipeline function is 
+ * loading the archived JSON index file, corresponding pipeline function is
  * added by registered function of elasticlunr.Pipeline.registeredFunctions
  *
  * Logs a warning if the function has not been registered.
@@ -563,8 +563,8 @@ elasticlunr.Pipeline.prototype.toJSON = function () {
 };
 /*!
  * elasticlunr.Index
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -919,14 +919,17 @@ elasticlunr.Index.prototype.search = function (query, userConfig) {
     var fieldBoost = config[field].boost;
 
     for (var docRef in fieldSearchResults) {
-      fieldSearchResults[docRef] = fieldSearchResults[docRef] * fieldBoost;
+      fieldSearchResults[docRef].score = fieldSearchResults[docRef].score * fieldBoost;
     }
 
     for (var docRef in fieldSearchResults) {
       if (docRef in queryResults) {
-        queryResults[docRef] += fieldSearchResults[docRef];
+        queryResults[docRef].score += fieldSearchResults[docRef].score;
       } else {
-        queryResults[docRef] = fieldSearchResults[docRef];
+        queryResults[docRef] = {
+          score: fieldSearchResults[docRef].score,
+          field: fieldSearchResults[docRef].field
+        };
       }
     }
   }
@@ -934,7 +937,7 @@ elasticlunr.Index.prototype.search = function (query, userConfig) {
   var results = [];
   var result;
   for (var docRef in queryResults) {
-    result = {ref: docRef, score: queryResults[docRef]};
+    result = {ref: docRef, score: queryResults[docRef].score, field: queryResults[docRef].field};
     if (this.documentStore.hasDoc(docRef)) {
       result.doc = this.documentStore.getDoc(docRef);
     }
@@ -1044,6 +1047,14 @@ elasticlunr.Index.prototype.fieldSearch = function (queryTokens, fieldName, conf
   }, this);
 
   scores = this.coordNorm(scores, docTokens, queryTokens.length);
+
+  for (var docRef in scores) {
+    scores[docRef] = {
+      score: scores[docRef],
+      field: fieldName
+    }
+  }
+
   return scores;
 };
 
@@ -1180,7 +1191,7 @@ elasticlunr.Index.prototype.use = function (plugin) {
 };
 /*!
  * elasticlunr.DocumentStore
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -1374,8 +1385,8 @@ function clone(obj) {
 }
 /*!
  * elasticlunr.stemmer
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  * Includes code from - http://tartarus.org/~martin/PorterStemmer/js.txt
  */
 
@@ -1593,8 +1604,8 @@ elasticlunr.stemmer = (function(){
 elasticlunr.Pipeline.registerFunction(elasticlunr.stemmer, 'stemmer');
 /*!
  * elasticlunr.stopWordFilter
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -1630,7 +1641,7 @@ elasticlunr.clearStopWords = function () {
 /**
  * Add customized stop words
  * user could use this function to add customized stop words
- * 
+ *
  * @params {Array} words customized stop words
  * @return {null}
  */
@@ -1780,8 +1791,8 @@ elasticlunr.stopWordFilter.stopWords = elasticlunr.defaultStopWords;
 elasticlunr.Pipeline.registerFunction(elasticlunr.stopWordFilter, 'stopWordFilter');
 /*!
  * elasticlunr.trimmer
- * Copyright (C) 2017 Oliver Nightingale
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Oliver Nightingale
+ * Copyright (C) 2018 Wei Song
  */
 
 /**
@@ -1811,7 +1822,7 @@ elasticlunr.trimmer = function (token) {
 elasticlunr.Pipeline.registerFunction(elasticlunr.trimmer, 'trimmer');
 /*!
  * elasticlunr.InvertedIndex
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Wei Song
  * Includes code from - http://tartarus.org/~martin/PorterStemmer/js.txt
  */
 
@@ -1849,7 +1860,7 @@ elasticlunr.InvertedIndex.load = function (serialisedData) {
  * By default this function starts at the root of the current inverted index, however
  * it can start at any node of the inverted index if required.
  *
- * @param {String} token 
+ * @param {String} token
  * @param {Object} tokenInfo format: { ref: 1, tf: 2}
  * @param {Object} root An optional node at which to start looking for the
  * correct place to enter the doc, by default the root of this elasticlunr.InvertedIndex
@@ -1881,7 +1892,7 @@ elasticlunr.InvertedIndex.prototype.addToken = function (token, tokenInfo, root)
 
 /**
  * Checks whether a token is in this elasticlunr.InvertedIndex.
- * 
+ *
  *
  * @param {String} token The token to be checked
  * @return {Boolean}
@@ -1903,7 +1914,7 @@ elasticlunr.InvertedIndex.prototype.hasToken = function (token) {
 /**
  * Retrieve a node from the inverted index for a given token.
  * If token not found in this InvertedIndex, return null.
- * 
+ *
  *
  * @param {String} token The token to get the node for.
  * @return {Object}
@@ -2046,62 +2057,62 @@ elasticlunr.InvertedIndex.prototype.toJSON = function () {
 
 /*!
  * elasticlunr.Configuration
- * Copyright (C) 2017 Wei Song
+ * Copyright (C) 2018 Wei Song
  */
- 
- /** 
+
+ /**
   * elasticlunr.Configuration is used to analyze the user search configuration.
-  * 
+  *
   * By elasticlunr.Configuration user could set query-time boosting, boolean model in each field.
-  * 
+  *
   * Currently configuration supports:
   * 1. query-time boosting, user could set how to boost each field.
   * 2. boolean model chosing, user could choose which boolean model to use for each field.
   * 3. token expandation, user could set token expand to True to improve Recall. Default is False.
-  * 
-  * Query time boosting must be configured by field category, "boolean" model could be configured 
+  *
+  * Query time boosting must be configured by field category, "boolean" model could be configured
   * by both field category or globally as the following example. Field configuration for "boolean"
   * will overwrite global configuration.
   * Token expand could be configured both by field category or golbally. Local field configuration will
   * overwrite global configuration.
-  * 
+  *
   * configuration example:
   * {
-  *   fields:{ 
+  *   fields:{
   *     title: {boost: 2},
   *     body: {boost: 1}
   *   },
   *   bool: "OR"
   * }
-  * 
+  *
   * "bool" field configuation overwrite global configuation example:
   * {
-  *   fields:{ 
+  *   fields:{
   *     title: {boost: 2, bool: "AND"},
   *     body: {boost: 1}
   *   },
   *   bool: "OR"
   * }
-  * 
+  *
   * "expand" example:
   * {
-  *   fields:{ 
+  *   fields:{
   *     title: {boost: 2, bool: "AND"},
   *     body: {boost: 1}
   *   },
   *   bool: "OR",
   *   expand: true
   * }
-  * 
+  *
   * "expand" example for field category:
   * {
-  *   fields:{ 
+  *   fields:{
   *     title: {boost: 2, bool: "AND", expand: true},
   *     body: {boost: 1}
   *   },
   *   bool: "OR"
   * }
-  * 
+  *
   * setting the boost to 0 ignores the field (this will only search the title):
   * {
   *   fields:{
@@ -2112,10 +2123,10 @@ elasticlunr.InvertedIndex.prototype.toJSON = function () {
   *
   * then, user could search with configuration to do query-time boosting.
   * idx.search('oracle database', {fields: {title: {boost: 2}, body: {boost: 1}}});
-  * 
-  * 
+  *
+  *
   * @constructor
-  * 
+  *
   * @param {String} config user configuration
   * @param {Array} fields fields of index instance
   * @module
@@ -2141,7 +2152,7 @@ elasticlunr.Configuration = function (config, fields) {
 
 /**
  * Build default search configuration.
- * 
+ *
  * @param {Array} fields fields of index instance
  */
 elasticlunr.Configuration.prototype.buildDefaultConfig = function (fields) {
@@ -2157,7 +2168,7 @@ elasticlunr.Configuration.prototype.buildDefaultConfig = function (fields) {
 
 /**
  * Build user configuration.
- * 
+ *
  * @param {JSON} config User JSON configuratoin
  * @param {Array} fields fields of index instance
  */
@@ -2199,7 +2210,7 @@ elasticlunr.Configuration.prototype.buildUserConfig = function (config, fields) 
 
 /**
  * Add all fields to user search configuration.
- * 
+ *
  * @param {String} bool Boolean model
  * @param {String} expand Expand model
  * @param {Array} fields fields of index instance
@@ -2237,7 +2248,7 @@ elasticlunr.Configuration.prototype.reset = function () {
 
 /*!
  * lunr.SortedSet
- * Copyright (C) 2017 Oliver Nightingale
+ * Copyright (C) 2018 Oliver Nightingale
  */
 
 /**

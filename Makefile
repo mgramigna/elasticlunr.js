@@ -20,8 +20,8 @@ SERVER_PORT ?= 3000
 TEST_PORT ?= 32423
 
 DOXX ?= ./node_modules/.bin/doxx
-NODE ?= /usr/bin/node
-NPM ?= /usr/bin/npm
+NODE ?= `which node`
+NPM ?= `which npm`
 PHANTOMJS ?= ./node_modules/.bin/phantomjs
 UGLIFYJS ?= ./node_modules/.bin/uglifyjs
 
